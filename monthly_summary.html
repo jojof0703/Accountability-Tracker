@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Totals Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.2rem;
+            margin: 20px 0 30px 0;
+            padding: 10px;
+            border-bottom: 2px solid #333;
+        }
+        .totals-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            width: 95%;
+            max-width: 800px;
+        }
+        .section-header {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .nav-link {
+            display: block;
+            text-align: center;
+            margin: 30px auto 0 auto;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .editable {
+            cursor: pointer;
+            position: relative;
+        }
+        .editable:hover {
+            background-color: #f8f8f8;
+        }
+        .editable input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .editable input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .archive-link {
+            display: block;
+            text-align: center;
+            margin: 30px auto;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            width: fit-content;
+            transition: background-color 0.2s;
+        }
+        .archive-link:hover {
+            background-color: #5a6268;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="monthlyTitle">Monthly Totals Summary</h1>
+
+    <!-- Trading & Journaling Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Trading & Journaling</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="tradingTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Fitness & Health Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Fitness & Health</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="fitnessTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Productivity & Learning Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Productivity & Learning</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="productivityTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Screen Time & Habits Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Screen Time & Habits</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="habitsTableBody"></tbody>
+        </table>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 20px; margin: 30px auto;">
+        <a href="accountability_tracker.html" class="nav-link">Daily Tracker</a>
+        <a href="weekly_summary.html" class="nav-link">Weekly Summary</a>
+    </div>
+
+    <a href="monthly_archives.html" class="archive-link">View Monthly Archives</a>
+
+    <script>
+    let clearSequence = '';
+
+    document.addEventListener('keydown', function(e) {
+        clearSequence += e.key;
+        if (clearSequence.length > 8) {
+            clearSequence = clearSequence.slice(-8);
+        }
+        if (clearSequence === 'clearall') {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                localStorage.removeItem('tradeJournalWeek');
+                localStorage.removeItem('gymJournalWeek');
+                localStorage.removeItem('tuningJournalWeek');
+                localStorage.removeItem('freelanceJournalWeek');
+                localStorage.removeItem('readingJournalWeek');
+                localStorage.removeItem('screenTimeJournalWeek');
+                localStorage.removeItem('walksJournalWeek');
+                localStorage.removeItem('carJournalWeek');
+                localStorage.removeItem('smokingJournalWeek');
+                localStorage.removeItem('journalingJournalWeek');
+                alert('All data has been cleared.');
+                location.reload();
+            }
+            clearSequence = '';
+        }
+    });
+
+    function updateTitle() {
+        const currentDate = new Date();
+        const monthName = currentDate.toLocaleDateString('en-US', { month: 'long' });
+        document.getElementById('monthlyTitle').textContent = `${monthName}'s Totals Summary`;
+    }
+
+    // Helper functions
+    function sumAll(obj, key) {
+        let sum = 0;
+        for (const k in obj) {
+            if (obj[k] && typeof obj[k][key] !== 'undefined') {
+                sum += parseInt(obj[k][key]) || 0;
+            }
+        }
+        return sum;
+    }
+
+    function countTrue(obj, key) {
+        let count = 0;
+        for (const k in obj) {
+            if (obj[k] && obj[k][key]) count++;
+        }
+        return count;
+    }
+
+    function sumArrayLengths(obj, key) {
+        let sum = 0;
+        for (const k in obj) {
+            if (obj[k] && Array.isArray(obj[k][key])) {
+                sum += obj[k][key].length;
+            }
+        }
+        return sum;
+    }
+
+    function updateMonthlyTotals() {
+        // Get current month in YYYY-MM format using local time
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        // Helper: check if a string is a valid YYYY-MM-DD date
+        function isValidDateString(dateStr) {
+            return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+        }
+
+        // Helper: filter data for current month only, with valid date strings
+        function filterDataForCurrentMonth(data) {
+            const filtered = {};
+            for (const date in data) {
+                if (isValidDateString(date) && date.substring(0, 7) === currentMonth) {
+                    filtered[date] = data[date];
+                }
+            }
+            return filtered;
+        }
+
+        // Load data
+        const tradeData = JSON.parse(localStorage.getItem('tradeJournalWeek') || '{}');
+        const gymData = JSON.parse(localStorage.getItem('gymJournalWeek') || '{}');
+        const tuningData = JSON.parse(localStorage.getItem('tuningJournalWeek') || '{}');
+        const freelanceData = JSON.parse(localStorage.getItem('freelanceJournalWeek') || '{}');
+        const readingData = JSON.parse(localStorage.getItem('readingJournalWeek') || '{}');
+        const screenData = JSON.parse(localStorage.getItem('screenTimeJournalWeek') || '{}');
+        const walksData = JSON.parse(localStorage.getItem('walksJournalWeek') || '{}');
+        const carData = JSON.parse(localStorage.getItem('carJournalWeek') || '{}');
+        const smokingData = JSON.parse(localStorage.getItem('smokingJournalWeek') || '{}');
+        const journalingData = JSON.parse(localStorage.getItem('journalingJournalWeek') || '{}');
+
+        // Filter all data for current month
+        const filteredTradeData = filterDataForCurrentMonth(tradeData);
+        const filteredGymData = filterDataForCurrentMonth(gymData);
+        const filteredTuningData = filterDataForCurrentMonth(tuningData);
+        const filteredFreelanceData = filterDataForCurrentMonth(freelanceData);
+        const filteredReadingData = filterDataForCurrentMonth(readingData);
+        const filteredScreenData = filterDataForCurrentMonth(screenData);
+        const filteredWalksData = filterDataForCurrentMonth(walksData);
+        const filteredCarData = filterDataForCurrentMonth(carData);
+        const filteredSmokingData = filterDataForCurrentMonth(smokingData);
+        const filteredJournalingData = filterDataForCurrentMonth(journalingData);
+
+        // Trading & Journaling Section
+        const tradingTotals = [
+            { label: 'Total Trades', value: sumAll(filteredTradeData, 'totalTrades') },
+            { label: 'Trades Journaled', value: sumAll(filteredTradeData, 'journaledTrades') },
+            { label: 'Backtesting Trades', value: sumAll(filteredTradeData, 'backtestingTrades') },
+            { label: 'Morning Journaled', value: countTrue(filteredJournalingData, 'morning') },
+            { label: 'Night Journaled', value: countTrue(filteredJournalingData, 'night') }
+        ];
+        renderTable('tradingTableBody', tradingTotals);
+
+        // Fitness & Health Section
+        const fitnessTotals = [
+            { label: 'Gym Splits', value: sumArrayLengths(filteredGymData, 'splits') },
+            { label: 'Gym Cardio Minutes', value: sumAll(filteredGymData, 'cardio') },
+            { label: 'Walks', value: sumAll(filteredWalksData, 'count') },
+            { label: 'Walk Minutes', value: sumAll(filteredWalksData, 'minutes') },
+            { label: 'Smoking Days', value: countTrue(filteredSmokingData, 'smoked') }
+        ];
+        renderTable('fitnessTableBody', fitnessTotals);
+
+        // Productivity & Learning Section
+        const productivityTotals = [
+            { label: 'Tuning Minutes (HPA)', value: sumAll(filteredTuningData, 'minutes') },
+            { label: 'Freelancing Minutes', value: sumAll(filteredFreelanceData, 'minutes') },
+            { label: 'Pages Read', value: sumAll(filteredReadingData, 'pages') },
+            { label: 'Car Work Sessions', value: sumAll(filteredCarData, 'count') },
+            { label: 'Car Work Minutes', value: sumAll(filteredCarData, 'minutes') }
+        ];
+        renderTable('productivityTableBody', productivityTotals);
+
+        // Screen Time & Habits Section
+        const habitsTotals = [
+            { label: 'Instagram Minutes', value: sumAll(filteredScreenData, 'instagram') },
+            { label: 'Snapchat Minutes', value: sumAll(filteredScreenData, 'snapchat') },
+            { label: 'Netflix Minutes', value: sumAll(filteredScreenData, 'netflix') },
+            { label: 'YouTube Minutes', value: sumAll(filteredScreenData, 'youtube') },
+            { label: 'Total Screen Time', value: sumAll(filteredScreenData, 'instagram') + 
+                sumAll(filteredScreenData, 'snapchat') + 
+                sumAll(filteredScreenData, 'netflix') + 
+                sumAll(filteredScreenData, 'youtube') },
+            { label: 'Porn Days', value: countTrue(filteredScreenData, 'watchedPorn') },
+            { label: 'Masturbated Days', value: countTrue(filteredScreenData, 'masturbated') }
+        ];
+        renderTable('habitsTableBody', habitsTotals);
+    }
+
+    // Helper function to render a table
+    function renderTable(tableId, data) {
+        const tbody = document.getElementById(tableId);
+        tbody.innerHTML = ''; // Clear existing rows
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.label}</td>
+                <td>${row.value}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Initialize the page
+    updateTitle();
+    updateMonthlyTotals();
+    </script>
+</body>
+</html> 
