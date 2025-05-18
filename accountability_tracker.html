@@ -111,21 +111,6 @@
             margin-top: 10px;
             font-size: 1rem;
         }
-        .undo-btn {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        .undo-btn:active {
-            background-color: #c82333;
-        }
         .nav-link {
             display: block;
             text-align: center;
@@ -171,7 +156,6 @@
                     <input type="number" id="backtestingTrades" min="0">
                 </div>
                 <button class="save-btn" onclick="saveTradeDataAndCollapse()">Save Trading Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('tradeJournalWeek', 'successMessage')">Undo Last Entry</button>
                 <div id="successMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -192,7 +176,6 @@
                     <input type="number" id="cardioMinutes" min="0">
                 </div>
                 <button class="save-btn" onclick="saveGymDataAndCollapse()">Save Gym Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('gymJournalWeek', 'gymSuccessMessage')">Undo Last Entry</button>
                 <div id="gymSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -205,7 +188,6 @@
                     <input type="number" id="tuningMinutes" min="0">
                 </div>
                 <button class="save-btn" onclick="saveTuningDataAndCollapse()">Save Tuning Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('tuningJournalWeek', 'tuningSuccessMessage')">Undo Last Entry</button>
                 <div id="tuningSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -218,7 +200,6 @@
                     <input type="number" id="freelanceMinutes" min="0">
                 </div>
                 <button class="save-btn" onclick="saveFreelanceDataAndCollapse()">Save Freelancing Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('freelanceJournalWeek', 'freelanceSuccessMessage')">Undo Last Entry</button>
                 <div id="freelanceSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -231,7 +212,6 @@
                     <input type="number" id="readingPages" min="0">
                 </div>
                 <button class="save-btn" onclick="saveReadingDataAndCollapse()">Save Reading Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('readingJournalWeek', 'readingSuccessMessage')">Undo Last Entry</button>
                 <div id="readingSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -260,7 +240,6 @@
                     <label style="font-size:0.98em;">Masturbated <input type="checkbox" id="masturbated" style="width:18px; height:18px; accent-color:#d9534f; vertical-align:middle;"></label>
                 </div>
                 <button class="save-btn" onclick="saveScreenTimeDataAndCollapse()">Save Screen Time Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('screenTimeJournalWeek', 'screenTimeSuccessMessage')">Undo Last Entry</button>
                 <div id="screenTimeSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -277,7 +256,6 @@
                     <input type="number" id="walksMinutes" min="0">
                 </div>
                 <button class="save-btn" onclick="saveWalksDataAndCollapse()">Save Walks Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('walksJournalWeek', 'walksSuccessMessage')">Undo Last Entry</button>
                 <div id="walksSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -294,7 +272,6 @@
                     <input type="number" id="carMinutes" min="0">
                 </div>
                 <button class="save-btn" onclick="saveCarDataAndCollapse()">Save Car Work Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('carJournalWeek', 'carSuccessMessage')">Undo Last Entry</button>
                 <div id="carSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -306,7 +283,6 @@
                     <label style="font-size:0.98em;">Smoked today <input type="checkbox" id="smokedToday" style="width:18px; height:18px; accent-color:#d9534f; vertical-align:middle;"></label>
                 </div>
                 <button class="save-btn" onclick="saveSmokingDataAndCollapse()">Save Smoking Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('smokingJournalWeek', 'smokingSuccessMessage')">Undo Last Entry</button>
                 <div id="smokingSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -319,7 +295,6 @@
                     <label style="font-size:0.98em;">Night journaled <input type="checkbox" id="journalNight" style="width:18px; height:18px; accent-color:#007bff; vertical-align:middle;"></label>
                 </div>
                 <button class="save-btn" onclick="saveJournalingDataAndCollapse()">Save Journaling Data</button>
-                <button class="undo-btn" onclick="undoLastEntry('journalingJournalWeek', 'journalingSuccessMessage')">Undo Last Entry</button>
                 <div id="journalingSuccessMessage" class="success-message" style="display:none;">Saved!</div>
             </div>
         </div>
@@ -389,7 +364,7 @@
             const totalTrades = parseInt(document.getElementById('totalTrades').value) || 0;
             const journaledTrades = parseInt(document.getElementById('journaledTrades').value) || 0;
             const backtestingTrades = parseInt(document.getElementById('backtestingTrades').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('tradeJournalWeek') || '{}');
             weekData[today] = {
                 totalTrades: totalTrades,
@@ -406,7 +381,7 @@
         function saveGymData() {
             const splits = Array.from(document.querySelectorAll('input[name="split"]:checked')).map(cb => cb.value);
             const cardio = parseInt(document.getElementById('cardioMinutes').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('gymJournalWeek') || '{}');
             weekData[today] = {
                 splits: splits,
@@ -421,7 +396,7 @@
         // --- Tuning Section Logic ---
         function saveTuningData() {
             const minutes = parseInt(document.getElementById('tuningMinutes').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('tuningJournalWeek') || '{}');
             weekData[today] = { minutes: minutes };
             localStorage.setItem('tuningJournalWeek', JSON.stringify(weekData));
@@ -433,7 +408,7 @@
         // --- Freelancing Section Logic ---
         function saveFreelanceData() {
             const minutes = parseInt(document.getElementById('freelanceMinutes').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('freelanceJournalWeek') || '{}');
             weekData[today] = { minutes: minutes };
             localStorage.setItem('freelanceJournalWeek', JSON.stringify(weekData));
@@ -445,7 +420,7 @@
         // --- Reading Section Logic ---
         function saveReadingData() {
             const pages = parseInt(document.getElementById('readingPages').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('readingJournalWeek') || '{}');
             weekData[today] = { pages: pages };
             localStorage.setItem('readingJournalWeek', JSON.stringify(weekData));
@@ -462,7 +437,7 @@
             const youtube = parseInt(document.getElementById('youtubeMinutes').value) || 0;
             const watchedPorn = document.getElementById('watchedPorn').checked;
             const masturbated = document.getElementById('masturbated').checked;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('screenTimeJournalWeek') || '{}');
             weekData[today] = {
                 instagram: instagram,
@@ -482,7 +457,7 @@
         function saveWalksData() {
             const count = parseInt(document.getElementById('walksCount').value) || 0;
             const minutes = parseInt(document.getElementById('walksMinutes').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('walksJournalWeek') || '{}');
             weekData[today] = {
                 count: count,
@@ -498,7 +473,7 @@
         function saveCarData() {
             const count = parseInt(document.getElementById('carCount').value) || 0;
             const minutes = parseInt(document.getElementById('carMinutes').value) || 0;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('carJournalWeek') || '{}');
             weekData[today] = {
                 count: count,
@@ -513,7 +488,7 @@
         // --- Smoking Section Logic ---
         function saveSmokingData() {
             const smoked = document.getElementById('smokedToday').checked;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('smokingJournalWeek') || '{}');
             weekData[today] = { smoked: smoked };
             localStorage.setItem('smokingJournalWeek', JSON.stringify(weekData));
@@ -526,7 +501,7 @@
         function saveJournalingData() {
             const morning = document.getElementById('journalMorning').checked;
             const night = document.getElementById('journalNight').checked;
-            const today = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toISOString().slice(0,10);
             let weekData = JSON.parse(localStorage.getItem('journalingJournalWeek') || '{}');
             weekData[today] = {
                 morning: morning,
@@ -537,27 +512,6 @@
             setTimeout(() => {
                 document.getElementById('journalingSuccessMessage').style.display = 'none';
             }, 1500);
-        }
-        // --- End of Section Logic ---
-        
-        // Undo functionality
-        function undoLastEntry(storageKey, successMessageId) {
-            let weekData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            const dates = Object.keys(weekData).sort();
-            
-            if (dates.length > 0) {
-                const lastDate = dates[dates.length - 1];
-                delete weekData[lastDate];
-                localStorage.setItem(storageKey, JSON.stringify(weekData));
-                
-                const successMessage = document.getElementById(successMessageId);
-                successMessage.textContent = 'Last entry undone!';
-                successMessage.style.display = 'block';
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                    successMessage.textContent = 'Saved!';
-                }, 1500);
-            }
         }
     </script>
 </body>
