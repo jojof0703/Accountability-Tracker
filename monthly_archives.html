@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Archives</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Accountability Tracker">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="theme-color" content="#333">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.2rem;
+            margin: 20px 0 30px 0;
+            padding: 10px;
+            border-bottom: 2px solid #333;
+        }
+        .totals-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            width: 95%;
+            max-width: 800px;
+        }
+        .section-header {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .nav-link {
+            display: block;
+            text-align: center;
+            margin: 30px auto 0 auto;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .month-selector {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .month-selector select {
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 200px;
+        }
+        .viewing-archive {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            color: #856404;
+        }
+        /* Progress Dashboard Styles */
+        .progress-dashboard {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        .progress-metric {
+            margin-bottom: 15px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .progress-bar-container {
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        .progress-target {
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .progress-target:hover {
+            background-color: #f0f0f0;
+        }
+        .progress-target input {
+            width: 50px;
+            padding: 2px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="archiveTitle">Monthly Archives</h1>
+    
+    <div class="month-selector">
+        <label for="monthSelect">Select Month:</label>
+        <select id="monthSelect" onchange="updateMonthlyTotals()">
+            <!-- Months will be populated by JavaScript -->
+        </select>
+    </div>
+    <div id="noDataMessage" style="display: none; text-align: center; padding: 20px; color: #666;">
+        No data available for this month.
+    </div>
+
+    <!-- Progress Dashboard -->
+    <div class="progress-dashboard">
+        <div class="progress-metric">
+            <div class="progress-label">
+                <span>Live Trading Sessions</span>
+                <span id="tradingProgress" class="progress-target" onclick="makeTargetEditable(this, 'tradingTarget')">0/20</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="tradingBar" class="progress-bar"></div>
+            </div>
+        </div>
+        <div class="progress-metric">
+            <div class="progress-label">
+                <span>Gym Workouts</span>
+                <span id="gymProgress" class="progress-target" onclick="makeTargetEditable(this, 'gymTarget')">0/24</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="gymBar" class="progress-bar"></div>
+            </div>
+        </div>
+        <div class="progress-metric">
+            <div class="progress-label">
+                <span>HPA Blocks</span>
+                <span id="hpaProgress" class="progress-target" onclick="makeTargetEditable(this, 'hpaTarget')">0/8</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="hpaBar" class="progress-bar"></div>
+            </div>
+        </div>
+        <div class="progress-metric">
+            <div class="progress-label">
+                <span>Coding Minutes</span>
+                <span id="codingProgress" class="progress-target" onclick="makeTargetEditable(this, 'codingTarget')">0/2400</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="codingBar" class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trading & Journaling Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Trading & Journaling</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="tradingTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Fitness & Health Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Fitness & Health</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="fitnessTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Productivity & Learning Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Productivity & Learning</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="productivityTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Screen Time & Habits Section -->
+    <div class="totals-section">
+        <h2 class="section-header">Screen Time & Habits</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="habitsTableBody"></tbody>
+        </table>
+    </div>
+    
+    <div style="display: flex; justify-content: center; gap: 20px; margin: 30px auto;">
+        <a href="accountability_tracker.html" class="nav-link">Daily Tracker</a>
+        <a href="weekly_summary.html" class="nav-link">Weekly Summary</a>
+        <a href="monthly_summary.html" class="nav-link">Current Month</a>
+    </div>
+    
+    <script>
+        let clearSequence = '';
+
+        document.addEventListener('keydown', function(e) {
+            clearSequence += e.key;
+            if (clearSequence.length > 8) {
+                clearSequence = clearSequence.slice(-8);
+            }
+            if (clearSequence === 'clearall') {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    localStorage.removeItem('tradeJournalWeek');
+                    localStorage.removeItem('gymJournalWeek');
+                    localStorage.removeItem('tuningJournalWeek');
+                    localStorage.removeItem('freelanceJournalWeek');
+                    localStorage.removeItem('readingJournalWeek');
+                    localStorage.removeItem('screenTimeJournalWeek');
+                    localStorage.removeItem('walksJournalWeek');
+                    localStorage.removeItem('carJournalWeek');
+                    localStorage.removeItem('smokingJournalWeek');
+                    localStorage.removeItem('journalingJournalWeek');
+                    alert('All data has been cleared.');
+                    location.reload();
+                }
+                clearSequence = '';
+            }
+        });
+
+        // Add long-press handler at the start of the script
+        let pressTimer;
+        let isLongPress = false;
+
+        document.addEventListener('mousedown', function(e) {
+            isLongPress = false;
+            pressTimer = setTimeout(function() {
+                isLongPress = true;
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    if (confirm('Are you REALLY sure? This will delete ALL your data permanently.')) {
+                        localStorage.removeItem('tradeJournalWeek');
+                        localStorage.removeItem('gymJournalWeek');
+                        localStorage.removeItem('tuningJournalWeek');
+                        localStorage.removeItem('freelanceJournalWeek');
+                        localStorage.removeItem('readingJournalWeek');
+                        localStorage.removeItem('screenTimeJournalWeek');
+                        localStorage.removeItem('walksJournalWeek');
+                        localStorage.removeItem('carJournalWeek');
+                        localStorage.removeItem('smokingJournalWeek');
+                        localStorage.removeItem('journalingJournalWeek');
+                        localStorage.removeItem('weeklyTargets');
+                        localStorage.removeItem('monthlyTargets');
+                        alert('All data has been cleared.');
+                        location.reload();
+                    }
+                }
+            }, 5000); // 5 seconds
+        });
+
+        document.addEventListener('mouseup', function() {
+            clearTimeout(pressTimer);
+        });
+
+        document.addEventListener('mouseleave', function() {
+            clearTimeout(pressTimer);
+        });
+
+        // Add touch events for mobile
+        document.addEventListener('touchstart', function(e) {
+            isLongPress = false;
+            pressTimer = setTimeout(function() {
+                isLongPress = true;
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    if (confirm('Are you REALLY sure? This will delete ALL your data permanently.')) {
+                        localStorage.removeItem('tradeJournalWeek');
+                        localStorage.removeItem('gymJournalWeek');
+                        localStorage.removeItem('tuningJournalWeek');
+                        localStorage.removeItem('freelanceJournalWeek');
+                        localStorage.removeItem('readingJournalWeek');
+                        localStorage.removeItem('screenTimeJournalWeek');
+                        localStorage.removeItem('walksJournalWeek');
+                        localStorage.removeItem('carJournalWeek');
+                        localStorage.removeItem('smokingJournalWeek');
+                        localStorage.removeItem('journalingJournalWeek');
+                        localStorage.removeItem('weeklyTargets');
+                        localStorage.removeItem('monthlyTargets');
+                        alert('All data has been cleared.');
+                        location.reload();
+                    }
+                }
+            }, 5000); // 5 seconds
+        });
+
+        document.addEventListener('touchend', function() {
+            clearTimeout(pressTimer);
+        });
+
+        document.addEventListener('touchcancel', function() {
+            clearTimeout(pressTimer);
+        });
+
+        // Helper functions
+        function sumAll(obj, key) {
+            let sum = 0;
+            for (const k in obj) {
+                if (obj[k] && typeof obj[k][key] !== 'undefined') {
+                    sum += parseInt(obj[k][key]) || 0;
+                }
+            }
+            return sum;
+        }
+
+        function countTrue(obj, key) {
+            let count = 0;
+            for (const k in obj) {
+                if (obj[k] && obj[k][key]) count++;
+            }
+            return count;
+        }
+
+        function sumArrayLengths(obj, key) {
+            let sum = 0;
+            for (const k in obj) {
+                if (obj[k] && Array.isArray(obj[k][key])) {
+                    sum += obj[k][key].length;
+                }
+            }
+            return sum;
+        }
+
+        // Function to get month name from YYYY-MM format
+        function getMonthName(monthStr) {
+            const [year, month] = monthStr.split('-');
+            const date = new Date(year, month - 1);
+            return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        // Function to get all months between start and current date
+        function getAllMonths() {
+            const months = [];
+            const startDate = new Date(2024, 0); // January 2024
+            const currentDate = new Date();
+            
+            while (startDate <= currentDate) {
+                const year = startDate.getFullYear();
+                const month = startDate.getMonth() + 1;
+                months.push(`${year}-${month.toString().padStart(2, '0')}`);
+                startDate.setMonth(startDate.getMonth() + 1);
+            }
+            
+            return months;
+        }
+
+        // Function to populate month selector
+        function populateMonthSelector() {
+            const monthSelect = document.getElementById('monthSelect');
+            monthSelect.innerHTML = ''; // Clear existing options
+            
+            // Get all months from January 2024 to current month
+            const allMonths = getAllMonths();
+            
+            // Add options for each month
+            allMonths.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = getMonthName(month);
+                monthSelect.appendChild(option);
+            });
+            
+            // Set default to current month
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            monthSelect.value = currentMonth;
+        }
+
+        // Function to check if a month has any data
+        function hasDataForMonth(month) {
+            const dataKeys = [
+                'tradeJournalWeek', 'gymJournalWeek', 'tuningJournalWeek',
+                'freelanceJournalWeek', 'readingJournalWeek', 'screenTimeJournalWeek',
+                'walksJournalWeek', 'carJournalWeek', 'smokingJournalWeek',
+                'journalingJournalWeek'
+            ];
+
+            return dataKeys.some(key => {
+                const data = JSON.parse(localStorage.getItem(key) || '{}');
+                return Object.keys(data).some(date => date.startsWith(month));
+            });
+        }
+
+        // Function to render progress bar
+        function renderBar(elementId, value, max) {
+            const bar = document.getElementById(elementId);
+            const percentage = (value / max) * 100;
+            bar.style.width = `${percentage}%`;
+            bar.style.backgroundColor = percentage >= 100 ? '#28a745' : '#007bff';
+        }
+
+        // Store custom targets in localStorage
+        let customTargets = JSON.parse(localStorage.getItem('monthlyTargets') || '{}');
+
+        // Function to make target editable
+        function makeTargetEditable(element, targetKey) {
+            const currentText = element.textContent;
+            const [current, target] = currentText.split('/');
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = target;
+            input.min = '0';
+            
+            input.onblur = function() {
+                const newTarget = parseInt(this.value) || 0;
+                const selectedMonth = document.getElementById('monthSelect').value;
+                
+                // Get existing targets for this month or calculate new ones
+                const existingTargets = customTargets[selectedMonth] || calculateMonthlyTargets(selectedMonth);
+                
+                // Update only the edited target while preserving others
+                customTargets[selectedMonth] = {
+                    ...existingTargets,
+                    [targetKey]: newTarget
+                };
+                
+                localStorage.setItem('monthlyTargets', JSON.stringify(customTargets));
+                updateMonthlyTotals();
+            };
+            
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            };
+            
+            element.textContent = '';
+            element.appendChild(input);
+            input.focus();
+        }
+
+        // Function to calculate monthly targets
+        function calculateMonthlyTargets(monthStr) {
+            // Check if we have custom targets for this month
+            if (customTargets[monthStr]) {
+                return {
+                    tradingSessions: customTargets[monthStr].tradingTarget,
+                    gymWorkouts: customTargets[monthStr].gymTarget,
+                    hpaBlocks: customTargets[monthStr].hpaTarget,
+                    codingMinutes: customTargets[monthStr].codingTarget
+                };
+            }
+
+            const [year, month] = monthStr.split('-');
+            const date = new Date(year, month - 1);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            
+            // Calculate weekdays (excluding weekends)
+            let weekdays = 0;
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(year, month - 1, day);
+                const dayOfWeek = currentDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 is Sunday, 6 is Saturday
+                    weekdays++;
+                }
+            }
+            
+            return {
+                tradingSessions: weekdays, // One session per weekday
+                gymWorkouts: Math.floor(daysInMonth * 0.8), // 80% of days
+                hpaBlocks: Math.floor(weekdays / 3), // One block every 3 weekdays
+                codingMinutes: weekdays * 120 // 2 hours per weekday
+            };
+        }
+
+        // Function to update progress bars
+        function updateProgressBars(monthData) {
+            const selectedMonth = document.getElementById('monthSelect').value;
+            const targets = calculateMonthlyTargets(selectedMonth);
+            
+            // Trading sessions progress
+            const tradingSessions = countTrue(monthData.tradeData, 'sessionCompleted');
+            document.getElementById('tradingProgress').textContent = `${tradingSessions}/${targets.tradingSessions}`;
+            renderBar('tradingBar', tradingSessions, targets.tradingSessions);
+            
+            // Gym workouts progress
+            let gymWorkouts = 0;
+            Object.values(monthData.gymData || {}).forEach(entry => {
+                if (Array.isArray(entry.splits)) {
+                    const splits = entry.splits.filter(s => 
+                        s !== 'Rest/Mobility' && 
+                        ['Chest/Shoulders/Biceps/Forearms', 'Back/Triceps', 'Legs/Abs'].includes(s)
+                    );
+                    gymWorkouts += splits.length;
+                }
+            });
+            document.getElementById('gymProgress').textContent = `${gymWorkouts}/${targets.gymWorkouts}`;
+            renderBar('gymBar', gymWorkouts, targets.gymWorkouts);
+            
+            // HPA blocks progress
+            const hpaMinutes = sumAll(monthData.tuningData || {}, 'minutes');
+            const hpaBlocks = Math.floor(hpaMinutes / 90);
+            document.getElementById('hpaProgress').textContent = `${hpaBlocks}/${targets.hpaBlocks}`;
+            renderBar('hpaBar', hpaBlocks, targets.hpaBlocks);
+            
+            // Coding minutes progress
+            const codingMinutes = sumAll(monthData.freelanceData || {}, 'minutes');
+            document.getElementById('codingProgress').textContent = `${codingMinutes}/${targets.codingMinutes}`;
+            renderBar('codingBar', codingMinutes, targets.codingMinutes);
+        }
+
+        // Function to update monthly totals
+        function updateMonthlyTotals() {
+            const monthSelect = document.getElementById('monthSelect');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const selectedMonth = monthSelect.value;
+            
+            // Always update the title based on the selected month
+            const [year, month] = selectedMonth.split('-');
+            const monthDate = new Date(parseInt(year), parseInt(month) - 1);
+            const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('archiveTitle').textContent = `${monthName} Archives`;
+            
+            // Show/hide no data message
+            if (!hasDataForMonth(selectedMonth)) {
+                noDataMessage.style.display = 'block';
+                // Clear all tables
+                document.querySelectorAll('table').forEach(table => {
+                    table.innerHTML = table.innerHTML.split('<tbody>')[0] + '<tbody></tbody>';
+                });
+                return;
+            }
+            
+            noDataMessage.style.display = 'none';
+            
+            // Load data
+            const tradeData = JSON.parse(localStorage.getItem('tradeJournalWeek') || '{}');
+            const gymData = JSON.parse(localStorage.getItem('gymJournalWeek') || '{}');
+            const tuningData = JSON.parse(localStorage.getItem('tuningJournalWeek') || '{}');
+            const freelanceData = JSON.parse(localStorage.getItem('freelanceJournalWeek') || '{}');
+            const readingData = JSON.parse(localStorage.getItem('readingJournalWeek') || '{}');
+            const screenData = JSON.parse(localStorage.getItem('screenTimeJournalWeek') || '{}');
+            const walksData = JSON.parse(localStorage.getItem('walksJournalWeek') || '{}');
+            const carData = JSON.parse(localStorage.getItem('carJournalWeek') || '{}');
+            const smokingData = JSON.parse(localStorage.getItem('smokingJournalWeek') || '{}');
+            const journalingData = JSON.parse(localStorage.getItem('journalingJournalWeek') || '{}');
+
+            // Helper function to filter data for the selected month
+            function filterDataForMonth(data) {
+                const filtered = {};
+                for (const date in data) {
+                    if (date.startsWith(selectedMonth)) {
+                        filtered[date] = data[date];
+                    }
+                }
+                return filtered;
+            }
+
+            // Filter all data for the selected month
+            const filteredTradeData = filterDataForMonth(tradeData);
+            const filteredGymData = filterDataForMonth(gymData);
+            const filteredTuningData = filterDataForMonth(tuningData);
+            const filteredFreelanceData = filterDataForMonth(freelanceData);
+            const filteredReadingData = filterDataForMonth(readingData);
+            const filteredScreenData = filterDataForMonth(screenData);
+            const filteredWalksData = filterDataForMonth(walksData);
+            const filteredCarData = filterDataForMonth(carData);
+            const filteredSmokingData = filterDataForMonth(smokingData);
+            const filteredJournalingData = filterDataForMonth(journalingData);
+
+            // Trading & Journaling Section
+            const tradingTotals = [
+                { label: 'Total Trades', value: sumAll(filteredTradeData, 'totalTrades') },
+                { label: 'Trades Journaled', value: sumAll(filteredTradeData, 'journaledTrades') },
+                { label: 'Backtesting Trades', value: sumAll(filteredTradeData, 'backtestingTrades') },
+                { label: 'Morning Journaled', value: countTrue(filteredJournalingData, 'morning') },
+                { label: 'Night Journaled', value: countTrue(filteredJournalingData, 'night') }
+            ];
+            renderTable('tradingTableBody', tradingTotals);
+
+            // Fitness & Health Section
+            const fitnessTotals = [
+                { label: 'Gym Splits', value: sumArrayLengths(filteredGymData, 'splits') },
+                { label: 'Gym Cardio Minutes', value: sumAll(filteredGymData, 'cardio') },
+                { label: 'Walks', value: sumAll(filteredWalksData, 'count') },
+                { label: 'Walk Minutes', value: sumAll(filteredWalksData, 'minutes') },
+                { label: 'Smoking Days', value: countTrue(filteredSmokingData, 'smoked') }
+            ];
+            renderTable('fitnessTableBody', fitnessTotals);
+
+            // Productivity & Learning Section
+            const productivityTotals = [
+                { label: 'Tuning Minutes (HPA)', value: sumAll(filteredTuningData, 'minutes') },
+                { label: 'Freelancing Minutes', value: sumAll(filteredFreelanceData, 'minutes') },
+                { label: 'Pages Read', value: sumAll(filteredReadingData, 'pages') },
+                { label: 'Car Work Sessions', value: sumAll(filteredCarData, 'count') },
+                { label: 'Car Work Minutes', value: sumAll(filteredCarData, 'minutes') }
+            ];
+            renderTable('productivityTableBody', productivityTotals);
+
+            // Screen Time & Habits Section
+            const habitsTotals = [
+                { label: 'Instagram Minutes', value: sumAll(filteredScreenData, 'instagram') },
+                { label: 'Snapchat Minutes', value: sumAll(filteredScreenData, 'snapchat') },
+                { label: 'Netflix Minutes', value: sumAll(filteredScreenData, 'netflix') },
+                { label: 'YouTube Minutes', value: sumAll(filteredScreenData, 'youtube') },
+                { label: 'Total Screen Time', value: sumAll(filteredScreenData, 'instagram') + 
+                    sumAll(filteredScreenData, 'snapchat') + 
+                    sumAll(filteredScreenData, 'netflix') + 
+                    sumAll(filteredScreenData, 'youtube') },
+                { label: 'Porn Days', value: countTrue(filteredScreenData, 'watchedPorn') },
+                { label: 'Masturbated Days', value: countTrue(filteredScreenData, 'masturbated') }
+            ];
+            renderTable('habitsTableBody', habitsTotals);
+
+            // Update progress bars
+            const monthData = {
+                tradeData: filteredTradeData,
+                gymData: filteredGymData,
+                tuningData: filteredTuningData,
+                freelanceData: filteredFreelanceData,
+                readingData: filteredReadingData,
+                screenTimeData: filteredScreenData,
+                walksData: filteredWalksData,
+                carData: filteredCarData,
+                smokingData: filteredSmokingData,
+                journalingData: filteredJournalingData
+            };
+            updateProgressBars(monthData);
+        }
+
+        // Helper function to render a table
+        function renderTable(tableId, data) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = ''; // Clear existing rows
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.label}</td>
+                    <td>${row.value}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Add helper functions at the start of the script
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatMonth(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
+        }
+
+        // Update the current month to use local time
+        const currentMonth = formatMonth(new Date());
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            populateMonthSelector();
+            updateMonthlyTotals();
+        });
+    </script>
+</body>
+</html> 
